@@ -3,36 +3,45 @@ package com.concurrency.labs.lab1;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import static com.concurrency.labs.lab1.LogUtils.log;
+
 @SpringBootApplication
 public class LabsApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(LabsApplication.class, args);
+    public static void main(String[] args) throws InterruptedException {
+        Thread eggThread;
+        ChickenEggDebate.ChickenThread chickenThread;
+        for (int i = 0; i < 10; i++) {
+            log("\n---------- Start ----------");
+            // Thread
+            chickenThread = new ChickenEggDebate.ChickenThread();
+            chickenThread.setName("Chicken Thread");
 
-        System.out.println("Починаємо дебати!");
+            // Runnable
+            eggThread = new Thread(new ChickenEggDebate.EggThread(), "Egg Thread");
 
-        // Thread
-        ChickenEggDebate.ChickenThread chickenThread = new ChickenEggDebate.ChickenThread();
-        chickenThread.setName("Курячий потік");
+            log("Chicken Thread ID: " + chickenThread.getId());
+            log("Chicken Thread name: " + chickenThread.getName());
+            log("Egg Thread ID: " + eggThread.getId());
+            log("Egg Thread name: " + eggThread.getName());
 
-        // Runnable
-        Thread eggThread = new Thread(new ChickenEggDebate.EggThread(), "Яєчний потік");
+            Thread.sleep(1000);
 
-        System.out.println("ID потоку курки: " + chickenThread.getId());
-        System.out.println("Ім'я потоку курки: " + chickenThread.getName());
-        System.out.println("ID потоку яйця: " + eggThread.getId());
-        System.out.println("Ім'я потоку яйця: " + eggThread.getName());
+            log("\n---------- Start ----------");
+            chickenThread.start();
+            eggThread.start();
 
-        chickenThread.start();
-        eggThread.start();
-
-        try {
-            chickenThread.join();
-            eggThread.join();
-
-            System.out.println("Дебати завершено!");
-        } catch (InterruptedException e) {
-            System.out.println("Головний потік перервано!");
+            try {
+                chickenThread.join();
+                if (eggThread.isAlive()) {//this is a tiny gap when eggThread isAlive but after this line it finishes
+                    eggThread.join();
+                    log("End: The winner is: " + eggThread.getName());
+                } else {
+                    log("End: The winner is: " + chickenThread.getName());
+                }
+            } catch (InterruptedException e) {
+                log("Main Thread has been interrupted");
+            }
         }
     }
 }

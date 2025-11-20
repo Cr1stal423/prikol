@@ -1,5 +1,7 @@
 package com.concurrency.labs.lab2;
 
+import java.util.Scanner;
+
 class Counter {
     private int c = 0;
 
@@ -48,16 +50,16 @@ class SynchronizedCounter {
     }
 }
 
-class DualCounter {
-    private int counter1 = 0;
-    private int counter2 = 0;
+class DualSynchronizedCounter {
+    private Integer counter1 = 0;
+    private Integer counter2 = 0;
     private final Object lock1 = new Object();
     private final Object lock2 = new Object();
 
     public void increment1() throws InterruptedException {
+        Thread.sleep(150);
         synchronized (lock1) {
             int a;
-            Thread.sleep(150);
             a = counter1;
             a++;
             counter1 = a;
@@ -65,9 +67,9 @@ class DualCounter {
     }
 
     public void decrement1() throws InterruptedException {
+        Thread.sleep(150);
         synchronized (lock1) {
             int a;
-            Thread.sleep(100);
             a = counter1;
             a--;
             counter1 = a;
@@ -75,9 +77,9 @@ class DualCounter {
     }
 
     public void increment2() throws InterruptedException {
+        Thread.sleep(133);
         synchronized (lock2) {
             int a;
-            Thread.sleep(150);
             a = counter2;
             a++;
             counter2 = a;
@@ -85,9 +87,9 @@ class DualCounter {
     }
 
     public void decrement2() throws InterruptedException {
+        Thread.sleep(100);
         synchronized (lock2) {
             int a;
-            Thread.sleep(100);
             a = counter2;
             a--;
             counter2 = a;
@@ -108,7 +110,23 @@ class DualCounter {
 }
 
 public class SynchronizationDemo {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        Scanner sc = new Scanner(System.in);
+        var i = 1;
+        while (i != 0) {
+            System.out.print("Select test to run (1-4, 0-end): ");
+            i = sc.nextInt();
+
+            switch (i) {
+                case 1 -> test1();
+                case 2 -> test2();
+                case 3 -> test3();
+                case 4 -> test4();
+            }
+        }
+    }
+
+    private static void test1() {
         // Test 1: Unsynchronized Counter
         System.out.println("Test 1: Unsynchronized Counter");
         Counter counter = new Counter();
@@ -144,7 +162,10 @@ public class SynchronizationDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
 
+    private static void test2() {
+        // Test 1: Unsynchronized Counter with Decrement
         System.out.println("\nTest 2: Unsynchronized Counter with Decrement");
         Counter counter2 = new Counter();
 
@@ -179,7 +200,9 @@ public class SynchronizationDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
 
+    private static void test3() {
         // Test 3: Synchronized Counter
         System.out.println("\nTest 3: Synchronized Counter");
         SynchronizedCounter syncCounter = new SynchronizedCounter();
@@ -215,18 +238,21 @@ public class SynchronizationDemo {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
 
+    private static void test4() throws InterruptedException {
         // Test 4: Dual Counter with synchronized blocks
         System.out.println("\nTest 4: Dual Counter with synchronized blocks");
-        DualCounter dualCounter = new DualCounter();
+        DualSynchronizedCounter dualSynchronizedCounter = new DualSynchronizedCounter();
 
         Thread thread7 = new Thread(() -> {
             try {
                 for (int i = 0; i < 5; i++) {
-                    dualCounter.increment1();
-                    dualCounter.increment2();
-                    System.out.println("Thread 7 - Counter1: " + dualCounter.value1() +
-                            ", Counter2: " + dualCounter.value2());
+                    dualSynchronizedCounter.increment1();
+                    dualSynchronizedCounter.increment2();
+                    System.out.println("Thread 7 - Counter1: " + dualSynchronizedCounter.value1());
+                    System.out.println("Thread 7 - Counter2: " + dualSynchronizedCounter.value2());
+                    Thread.sleep(310);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -236,10 +262,11 @@ public class SynchronizationDemo {
         Thread thread8 = new Thread(() -> {
             try {
                 for (int i = 0; i < 5; i++) {
-                    dualCounter.increment1();
-                    dualCounter.increment2();
-                    System.out.println("Thread 8 - Counter1: " + dualCounter.value1() +
-                            ", Counter2: " + dualCounter.value2());
+                    Thread.sleep(310);
+                    dualSynchronizedCounter.increment1();
+                    dualSynchronizedCounter.increment2();
+                    System.out.println("Thread 8 - Counter1: " + dualSynchronizedCounter.value1());
+                    System.out.println("Thread 8 - Counter2: " + dualSynchronizedCounter.value2());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -1,15 +1,17 @@
 package com.concurrency.labs.lab1;
 
+import static java.rmi.server.LogStream.log;
+
 public class ChickenEggDebate {
     static class ChickenThread extends Thread {
         public void run() {
             try {
                 for (int i = 0; i < 5; i++) {
-                    System.out.println("Курка була першою!");
-                    Thread.sleep(1000);
+                    log("Chicken is first");
+                    Thread.sleep(randomMillis());
                 }
             } catch (InterruptedException e) {
-                System.out.println("Курячий потік перервано!");
+                log("Chicken thread has been interrupted");
             }
         }
     }
@@ -18,12 +20,16 @@ public class ChickenEggDebate {
         public void run() {
             try {
                 for (int i = 0; i < 5; i++) {
-                    System.out.println("Ні, яйце було першим!");
-                    Thread.sleep(1000);
+                    log("Egg is first");
+                    Thread.sleep(randomMillis());
                 }
             } catch (InterruptedException e) {
-                System.out.println("Яєчний потік перервано!");
+                log("Egg thread has been interrupted");
             }
         }
+    }
+
+    private static long randomMillis() {
+        return  (long) (Math.random() * 1000);
     }
 }

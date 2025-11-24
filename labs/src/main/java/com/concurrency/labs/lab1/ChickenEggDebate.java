@@ -1,9 +1,11 @@
 package com.concurrency.labs.lab1;
 
-import static java.rmi.server.LogStream.log;
+import static com.concurrency.labs.lab1.LogUtils.log;
 
 public class ChickenEggDebate {
+
     static class ChickenThread extends Thread {
+        @Override
         public void run() {
             try {
                 for (int i = 0; i < 5; i++) {
@@ -17,6 +19,7 @@ public class ChickenEggDebate {
     }
 
     static class EggThread implements Runnable {
+        @Override
         public void run() {
             try {
                 for (int i = 0; i < 5; i++) {
@@ -29,7 +32,21 @@ public class ChickenEggDebate {
         }
     }
 
-    private static long randomMillis() {
-        return  (long) (Math.random() * 1000);
+    static class DogThread implements Runnable {
+        @Override
+        public void run() {
+            try {
+                for (int i = 0; i < 5; i++) {
+                    log("Dog is first");
+                    Thread.sleep(randomMillis());
+                }
+            } catch (InterruptedException e) {
+                log("Dog thread has been interrupted");
+            }
+        }
+    }
+
+    protected static long randomMillis() {
+        return (long) (Math.random() * 1000);
     }
 }

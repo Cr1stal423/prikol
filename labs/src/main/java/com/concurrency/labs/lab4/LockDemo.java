@@ -1,5 +1,7 @@
 package com.concurrency.labs.lab4;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -7,28 +9,15 @@ import java.util.concurrent.locks.ReentrantLock;
 public class LockDemo {
     static class Counter {
         private int c = 0;
-        private final Lock lock = new ReentrantLock();
 
         public void increment() throws InterruptedException {
-            boolean locked = false;
-            try {
-                // Try to acquire the lock with a timeout of 10 seconds
-                locked = lock.tryLock(10, TimeUnit.SECONDS);
-                if (locked) {
-                    int a;
-                    Thread.sleep(150);
-                    a = c;
-                    a++;
-                    c = a;
-                } else {
-                    System.out.println(Thread.currentThread().getName() + " could not acquire lock, operation timed out");
-                }
-            } finally {
-                // Only unlock if we successfully acquired the lock
-                if (locked) {
-                    lock.unlock();
-                }
-            }
+            int a;
+            Thread.sleep((int)(Math.random() * 10));
+            Thread.sleep(150);
+            a = c;
+            Thread.sleep((int)(Math.random() * 10));
+            a++;
+            c = a;
         }
 
         public int value() {
@@ -37,53 +26,49 @@ public class LockDemo {
     }
 
     public static void main(String[] args) {
-        final Counter counter = new Counter();
+        int numThreads = 5; // ← тут задаємо кількість потоків вручну
 
-        // Create and start first thread
-        Thread thread1 = new Thread(() -> {
+        Counter counter = new Counter();
+        Lock lock = new ReentrantLock();
+
+        Runnable task = () -> {
             for (int i = 0; i < 5; i++) {
                 try {
-                    counter.increment();
-                    System.out.println(Thread.currentThread().getName() + " - Counter value: " + counter.value());
-                    // Small delay to allow the other thread to get the lock
-                    Thread.sleep(50);
+                    if (lock.tryLock(10, TimeUnit.SECONDS)) {
+                        try {
+                            counter.increment();
+                            System.out.println(Thread.currentThread().getName() +
+                                    " виконав increment #" + (i + 1) +
+                                    " → значення: " + counter.value());
+                        } finally {
+                            lock.unlock();
+                        }
+                    } else {
+                        System.out.println(Thread.currentThread().getName() +
+                                " не зміг отримати блокування");
+                    }
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.out.println("Thread 1 was interrupted");
-                    break;
+                    e.printStackTrace();
                 }
             }
-        }, "Thread-1");
+        };
 
-        // Create and start second thread
-        Thread thread2 = new Thread(() -> {
-            for (int i = 0; i < 5; i++) {
-                try {
-                    counter.increment();
-                    System.out.println(Thread.currentThread().getName() + " - Counter value: " + counter.value());
-                    // Small delay to allow the other thread to get the lock
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    System.out.println("Thread 2 was interrupted");
-                    break;
-                }
-            }
-        }, "Thread-2");
+        // Створюємо ThreadPool
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
-        System.out.println("Starting threads...");
-        thread1.start();
-        thread2.start();
-
-        // Wait for both threads to complete
-        try {
-            thread1.join();
-            thread2.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.out.println("Main thread was interrupted while waiting for threads to complete");
+        // Відправляємо задачі у пул
+        for (int i = 0; i < numThreads; i++) {
+            executor.submit(task);
         }
 
-        System.out.println("Final counter value: " + counter.value());
+        // Закриваємо пул
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Фінальне значення лічильника: " + counter.value());
     }
 }
